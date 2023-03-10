@@ -1,10 +1,13 @@
 package ETU2035.framework.servlet;
 
+import ETU2035.framework.Mapping;
 import java.io.*;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
+import java.util.HashMap;
 
 public class FrontServlet extends HttpServlet {
+      HashMap<String,Mapping> MappingUrls;
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
         String url=request.getServletPath();
