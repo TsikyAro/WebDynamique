@@ -4,9 +4,17 @@
         <servlet-name>FrontServlet</servlet-name>
         <servlet-class>ETU2035.framework.servlet.FrontServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>FrontServe</servlet-name>
+        <servlet-class>ETU2035.framework.servlet.FrontServe</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>FrontServlet</servlet-name>
-        <url-pattern>/FrontServlet</url-pattern>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>FrontServe</servlet-name>
+        <url-pattern>/FrontServe</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

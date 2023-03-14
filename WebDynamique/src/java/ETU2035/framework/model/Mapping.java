@@ -1,9 +1,14 @@
-package ETU2035.framework;
+package ETU2035.framework.model;
 
 public class Mapping {
     String className;
     String method;
 
+    public Mapping(String className, String method) {
+        this.className = className;
+        this.method = method;
+    }
+    
     public String getClassName() {
         return className;
     }
