@@ -1,4 +1,4 @@
-package ETU2035.framework.servlet;
+package ETU2035.framework.server;
 
 public class ModelView {
     String url;

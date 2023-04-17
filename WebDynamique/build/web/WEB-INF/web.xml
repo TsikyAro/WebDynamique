@@ -2,11 +2,11 @@
 <web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
     <servlet>
         <servlet-name>FrontServlet</servlet-name>
-        <servlet-class>ETU2035.framework.servlet.FrontServlet</servlet-class>
+        <servlet-class>ETU2035.framework.server.FrontServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>FrontServe</servlet-name>
-        <servlet-class>ETU2035.framework.servlet.FrontServe</servlet-class>
+        <servlet-class>ETU2035.framework.server.FrontServe</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>FrontServlet</servlet-name>

@@ -1,5 +1,6 @@
 package ETU2035.framework.model;
 
+import ETU2035.framework.server.GetUrl;
 public class Employe {
     
     private String name;

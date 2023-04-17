@@ -1,4 +1,4 @@
-package ETU2035.framework.model;
+package ETU2035.framework.server;
 
 public class Mapping {
     String className;
