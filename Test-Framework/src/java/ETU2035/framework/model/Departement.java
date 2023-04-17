@@ -1,5 +1,7 @@
 package ETU2035.framework.model;
+
 import ETU2035.framework.server.GetUrl;
+
 public class Departement {
     private String nom_departement;
     private int nbr_departement;

@@ -1,5 +1,6 @@
 package ETU2035.framework.model;
 
+import ETU2035.framework.server.GetUrl;
 public class Employe {
     
     private String name;
@@ -7,7 +8,7 @@ public class Employe {
     
     @GetUrl(url="findAllEmp")
     public Employe findAll(){
-        Employe emp = new Employe(getName(),getAges());
+        Employe emp = new Employe("Rotsy",20);
         return emp;
     }
 
