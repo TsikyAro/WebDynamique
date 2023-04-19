@@ -4,6 +4,7 @@ import java.io.*;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ public class FrontServlet extends HttpServlet {
         }
        return rar.toArray(new String[rar.size()]); 
     }
+    
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws Exception {
         PrintWriter out = response.getWriter();
@@ -56,14 +58,33 @@ public class FrontServlet extends HttpServlet {
             Mapping m = MappingUrls.get(request.getRequestURI().replace(request.getContextPath()+"/",""));
             String key = request.getRequestURI().replace(request.getContextPath()+"/","");
             String name =  "ETU2035.framework.model."+m.getClassName();
-            Object o =Class.forName(name).getConstructor().newInstance() ;
+            Object o =Class.forName(name).getConstructor().newInstance(null);
             Object vao = o.getClass().getMethod(m.getMethod()).invoke(o);
-            String jsp = "/"+vao.getClass().getSimpleName()+".jsp";
-            ModelView view = new ModelView(jsp);
-            view.addItem(key, vao);
-            request.setAttribute(key,view.getData());
-            RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
-            dispat.forward(request, response);
+            out.println(name);
+            if (m.getMethod().compareToIgnoreCase("findAll")==0){
+                ModelView view = new ModelView(vao.getClass().getSimpleName());
+                view.addItem(key, vao);
+                request.setAttribute(key,view.getData());
+                RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
+                dispat.forward(request, response);
+            }
+            else if(m.getMethod().compareToIgnoreCase("save")==0){
+                
+                Class<?> clazz = o.getClass();
+//                out.println(clazz);
+                Field[] fields = clazz.getDeclaredFields();
+                Method[] listM = new Method[fields.length];
+                for(int i =0; i<fields.length; i++){
+                    String capitalized = Character.toUpperCase(fields[i].getName().charAt(0)) + fields[i].getName().substring(1);
+                    Method temp = clazz.getDeclaredMethod("get"+ capitalized);
+                    Object value = request.getParameter(fields[i].getName());
+//                    fields[i].getType().cast(value);
+                    listM[i] = clazz.getDeclaredMethod("set"+ capitalized,String.class);
+                    listM[i].invoke(o, value);
+                    out.println(temp.invoke(o, null).toString());
+                }
+            }
+            
         }catch(Exception e){
             out.println(e);
             e.printStackTrace();
@@ -75,6 +96,7 @@ public class FrontServlet extends HttpServlet {
             throws ServletException, IOException {
           
           try {
+              
               processRequest(request, response);
           } catch (Exception ex) {
               Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -84,10 +106,21 @@ public class FrontServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+        PrintWriter out = response.getWriter();
+        ArrayList<String> stringe = new ArrayList<>();
+        out.println("huhu on est la");
+        String classe ="ETU2035.framework.model."+request.getParameter("classe");
           try {
-              processRequest(request, response);
+              Object objet = Class.forName(classe).getConstructor().newInstance() ;
+              Class<?> clazz = objet.getClass();
+              Field[] field = clazz.getDeclaredFields();
+              for(int i =0; i<field.length; i++){
+                  String value = request.getParameter(field[i].getName());
+//                  out.println(field[i].getName());
+                    
+              }
           } catch (Exception ex) {
+              out.println(ex);
               Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
           }
          

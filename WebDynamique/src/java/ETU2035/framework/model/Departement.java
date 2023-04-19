@@ -9,6 +9,10 @@ public class Departement {
         Departement emp = new Departement("Departement Marketing",12);
         return emp;
     }
+    @GetUrl(url="saveDept")
+    public void save(){
+        Departement emp = new Departement(this.getNom_departement(),this.getNbr_departement());
+    }
     public Departement() {
     }
     public Departement(String nom_departement, int nbr_departement) {
@@ -28,7 +32,7 @@ public class Departement {
         return nbr_departement;
     }
 
-    public void setNbr_departement(int nbr_departement) {
-        this.nbr_departement = nbr_departement;
+    public void setNbr_departement(String nbr_departement) {
+        this.nbr_departement = Integer.parseInt(nbr_departement);
     }
 }

@@ -14,6 +14,18 @@
 <body>
     <h1>Département <%= dept.getNom_departement() %></h1>
     <p>Code : <%= dept.getNbr_departement() %></p>
+
+    <h2>Insertion Département</h2>
+    <form action="saveDept" >
+        <label for="name">Nom Département</label>
+        <p><input type="text" name="nom_departement"></p>
+        <br>
+        <label for="name">Nombre Département</label>
+        <p><input type="number" name="nbr_departement"></p>
+        <br>
+        <input type="hidden" name="classe" value="Departement">
+        <input type="submit" value="Inserer">
+    </form>
 </body>
 </html>
 
