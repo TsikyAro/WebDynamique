@@ -1,6 +1,5 @@
 <%@ page import="java.util.HashMap" %>
-<%@ page import="ETU2035.framework.model.Departement" %>
-
+<%@ page import="model.Departement" %>
 <%
     HashMap<String,Departement> depte =(HashMap<String,Departement>)request.getAttribute("findAllDept");
     Departement dept = depte.get("findAllDept");
