@@ -1,16 +1,20 @@
 package ETU2035.framework.server;
 import java.io.*;
 import jakarta.servlet.*;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
+
+@MultipartConfig
 public class FrontServlet extends HttpServlet {
       HashMap<String,Mapping> MappingUrls;
     public void init (){
@@ -49,6 +53,64 @@ public class FrontServlet extends HttpServlet {
         }
        return rar.toArray(new String[rar.size()]); 
     }
+    private  String getFileName(jakarta.servlet.http.Part part) {
+        String contentDisposition = part.getHeader("content-disposition");
+        String[] parts = contentDisposition.split(";");
+        for (String partStr : parts) {
+            if (partStr.trim().startsWith("filename"))
+                return partStr.substring(partStr.indexOf('=') + 1).trim().replace("\"", "");
+        }
+        return null;
+    }
+    private FileUpload fillFileUpload( FileUpload file, jakarta.servlet.http.Part filepart ){
+        try (InputStream io = filepart.getInputStream()) {
+            ByteArrayOutputStream buffers = new ByteArrayOutputStream();
+            byte[] buffer = new byte[(int) filepart.getSize()];
+            int read;
+            while ((read = io.read(buffer, 0, buffer.length)) != -1) {
+                buffers.write(buffer, 0, read);
+            }
+            file.setNomFichier(this.getFileName(filepart));
+            file.setData(buffers.toByteArray());
+            return file;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public  FileUpload fileTraitement( Collection<jakarta.servlet.http.Part> files, Field field ){
+        FileUpload file = new FileUpload();
+        String name = field.getName();
+        boolean exists = false;
+        String filename = null;
+        jakarta.servlet.http.Part filepart = null;
+        for (jakarta.servlet.http.Part part : files) {
+            if (part.getName().equals(name)) {
+                filepart = part;
+                exists = true;
+                break;
+            }
+        }
+        file = this.fillFileUpload(file, filepart);
+        return file;
+    }
+    private void handleFile( Class<?> classs, HttpServletRequest request, Object object ){
+        Field[] fields = classs.getDeclaredFields();
+        try {
+            Collection<Part> files = request.getParts();
+            for (Field f : fields) {
+                String capitalized = Character.toUpperCase(f.getName().charAt(0)) + f.getName().substring(1);
+                if (f.getType() == ETU2035.framework.server.FileUpload.class) {
+                    Method m = classs.getMethod("set"+capitalized, f.getType());
+                    Object o = this.fileTraitement(files, f);
+                    // Object o = this.fileTraitement(files, f);
+                    m.invoke(object, o);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws Exception {
         PrintWriter out = response.getWriter();
@@ -72,12 +134,11 @@ public class FrontServlet extends HttpServlet {
                 Object value = request.getParameter(parametre[i].getName());
                 objet[i] = value;
             }
-            Object vao = mets.invoke(o, objet);
+            action(m.getMethod(),key,null,o,request,response);
+//            Object vao = mets.invoke(o, objet);
             int paramCount = mets.getParameterCount();
-            action(m.getMethod(),key,vao,o,request,response);
         }catch(Exception e){
-            out.println(e);
-            e.printStackTrace();
+            e.printStackTrace(out);
         }
         
     }
@@ -96,14 +157,22 @@ public class FrontServlet extends HttpServlet {
             Field[] fields = clazz.getDeclaredFields();
             Method[] listM = new Method[fields.length];
             for(int i =0; i<fields.length; i++){
-                String capitalized = Character.toUpperCase(fields[i].getName().charAt(0)) + fields[i].getName().substring(1);
-//                out.println(capitalized);
-                Method temp = clazz.getDeclaredMethod("get"+ capitalized);
-                Object value = request.getParameter(fields[i].getName());
-                listM[i] = clazz.getDeclaredMethod("set"+ capitalized,String.class);
-                listM[i].invoke(o, value);
-                out.println(temp.invoke(o, null).toString());
+                if(fields[i].getType()!= FileUpload.class){
+                    String capitalized = Character.toUpperCase(fields[i].getName().charAt(0)) + fields[i].getName().substring(1);
+    //                out.println(capitalized);
+                    Method temp = clazz.getDeclaredMethod("get"+ capitalized);
+                    Object value = request.getParameter(fields[i].getName());
+                    listM[i] = clazz.getDeclaredMethod("set"+ capitalized,String.class);
+                    listM[i].invoke(o, value);
+                    out.println(temp.invoke(o, null).toString());
+                }
             }
+            this.handleFile(clazz, request, o);
+             ModelView view = new ModelView("teste");
+                view.addItem("aro", o);
+                request.setAttribute("aro",o);
+                RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
+                dispat.forward(request, response);
         }
     }
     @Override

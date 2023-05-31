@@ -1,10 +1,21 @@
 package model;
 import ETU2035.framework.server.Argument;
+import ETU2035.framework.server.FileUpload;
 import ETU2035.framework.server.GetUrl;
+
 
 public class Departement {
     private String nom_departement;
     private int nbr_departement;
+    private ETU2035.framework.server.FileUpload upload;
+
+    public FileUpload getUpload() {
+        return upload;
+    }
+
+    public void setUpload(FileUpload upload) {
+        this.upload = upload;
+    }
     
     @GetUrl(url="findAllDept")
     public Departement findAll(String id){
