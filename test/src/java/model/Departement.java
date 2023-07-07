@@ -2,11 +2,13 @@ package model;
 import ETU2035.framework.server.Argument;
 import ETU2035.framework.server.FileUpload;
 import ETU2035.framework.server.GetUrl;
+import ETU2035.framework.server.ModelView;
+import ETU2035.framework.server.Singleton;
 
-
+@Singleton(url="scope")
 public class Departement {
     private String nom_departement;
-    private int nbr_departement;
+    private Integer nbr_departement;
     private ETU2035.framework.server.FileUpload upload;
 
     public FileUpload getUpload() {
@@ -18,9 +20,11 @@ public class Departement {
     }
     
     @GetUrl(url="findAllDept")
-    public Departement findAll(String id){
+    public ModelView findAll(Integer id){
         Departement emp = new Departement("Departement Marketing",12);
-        return emp;
+        ModelView view  = new ModelView(this.getClass().getSimpleName());
+        view.addItem("dept", emp);
+        return view;
     }
     @GetUrl(url="saveDept")
     public void save(){
@@ -28,7 +32,7 @@ public class Departement {
     }
     public Departement() {
     }
-    public Departement(String nom_departement, int nbr_departement) {
+    public Departement(String nom_departement, Integer nbr_departement) {
         this.nom_departement = nom_departement;
         this.nbr_departement = nbr_departement;
     }
@@ -47,7 +51,7 @@ public class Departement {
     }
     
     @Argument(arg="nbr_departement")
-    public void setNbr_departement(String nbr_departement) {
-        this.nbr_departement = Integer.parseInt(nbr_departement);
+    public void setNbr_departement(Integer nbr_departement) {
+        this.nbr_departement = nbr_departement;
     }
 }

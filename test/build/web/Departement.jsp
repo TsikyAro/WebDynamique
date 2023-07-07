@@ -1,8 +1,7 @@
 <%@ page import="java.util.HashMap" %>
 <%@ page import="model.Departement" %>
 <%
-//    HashMap<String,Departement> depte =(HashMap<String,Departement>)request.getAttribute("findAllDept");
-//    Departement dept = depte.get("findAllDept");
+    Departement dept = (Departement)request.getAttribute("dept");
 %>
 <!DOCTYPE html>
 <html>
@@ -11,7 +10,8 @@
     <title>Departement</title>
 </head>
 <body>
-
+    <%= dept.getNom_departement()%>    
+    <%= dept.getNbr_departement()%>
 
     <h2>Insertion Departement</h2>
     <form action="saveDept" method="post" enctype="multipart/form-data" >

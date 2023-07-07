@@ -7,9 +7,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
@@ -17,9 +19,12 @@ import org.apache.commons.io.FilenameUtils;
 @MultipartConfig
 public class FrontServlet extends HttpServlet {
       HashMap<String,Mapping> MappingUrls;
+      HashMap<String,Object> singleton;
     public void init (){
         MappingUrls = new HashMap<>();
+        singleton = new HashMap<>();
           try {
+            String teste =getInitParameter("connecte");
             String directory =getServletContext().getRealPath("\\WEB-INF\\classes\\model");
             String [] classe = reset(directory);
             for(int i =0 ;i< classe.length; i++){
@@ -27,6 +32,12 @@ public class FrontServlet extends HttpServlet {
                 String name = classe[i];
                 className = "model." +className;
                 Class<?> clazz= Class.forName(className);
+                Singleton scope = clazz.getAnnotation(Singleton.class);
+                if(scope!=null){
+//                    String value = scope.url(); 
+                    Object ob = clazz;
+                    singleton.put(clazz.getName(), null);
+                }
                 Method [] methods = clazz.getDeclaredMethods();
                 for (Method method : methods) {
                      Annotation[] an = method.getAnnotations();
@@ -111,6 +122,29 @@ public class FrontServlet extends HttpServlet {
             e.printStackTrace();
         }
     }
+    public Object[] ObjetParametre(Method mets,HttpServletRequest request){
+        Parameter [] parametre = mets.getParameters();
+        Class<?>[] tableClass = mets.getParameterTypes();
+        Object [] objet = new Object[tableClass.length];
+        for(int i = 0; i<parametre.length; i++){
+            String value = request.getParameter(parametre[i].getName());
+            objet[i] = cast(value,tableClass);
+        }
+        return objet;
+    }
+    public void Dispatch(ModelView view,HttpServletRequest request, HttpServletResponse response) throws Exception{
+        if(view != null){
+            if(view.getData().size()!=0){
+                    for(Map.Entry<String,Object> entry: view.getData().entrySet()){
+                        String key1 = entry.getKey();
+                        Object value = entry.getValue();
+                        request.setAttribute(key1,value);
+                    }
+                }
+            RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
+            dispat.forward(request, response);
+        }
+    }
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws Exception {
         PrintWriter out = response.getWriter();
@@ -119,7 +153,17 @@ public class FrontServlet extends HttpServlet {
             Mapping m = MappingUrls.get(request.getRequestURI().replace(request.getContextPath()+"/",""));
             String key = request.getRequestURI().replace(request.getContextPath()+"/","");
             String name =  "model." + m.getClassName();
-            Object o =Class.forName(name).getConstructor().newInstance(null);
+            Object o = null;
+            Class classe = Class.forName(name);
+            if(singleton.containsKey(classe.getName())){
+                if(singleton.get(classe.getName())==null){
+                    singleton.put(classe.getName(), classe.getConstructor().newInstance());
+                }
+                    o = singleton.get(classe.getName());
+            }else{
+                    o = Class.forName(name).getConstructor().newInstance(null);
+            }
+            System.out.println(o);
             Method[] methods = o.getClass().getMethods();
             Method mets = null;
             for(int i =0; i<methods.length; i++){
@@ -128,53 +172,76 @@ public class FrontServlet extends HttpServlet {
                     break;
                 }
             }
-            Parameter [] parametre = mets.getParameters();
-            Object [] objet = new Object[parametre.length];
-            for(int i = 0; i<parametre.length; i++){
-                Object value = request.getParameter(parametre[i].getName());
-                objet[i] = value;
-            }
-            action(m.getMethod(),key,null,o,request,response);
-//            Object vao = mets.invoke(o, objet);
+            
             int paramCount = mets.getParameterCount();
+            ModelView view;
+            Object [] objet;
+            if(paramCount == 0){
+                objet = this.ObjetParametre(mets, request);
+                Class<?> clazz = o.getClass();
+                Field[] fields = clazz.getDeclaredFields();
+                Method[] listM = new Method[fields.length];
+                for(int i = 0; i<fields.length;i++){
+//                  if(singleton.containsKey(classe.getName())){
+                    if(fields[i].getType()!= FileUpload.class){
+                      listM[i] = clazz.getDeclaredMethod("set"+ Capitalized(fields[i].getName()),fields[i].getType());
+                      Method temp = clazz.getDeclaredMethod("get"+ Capitalized(fields[i].getName()));
+                      String value = request.getParameter(fields[i].getName());
+                      Object ob = caste(value,fields[i].getType());
+                      listM[i].invoke(o,ob);
+                      out.println(temp.invoke(o, null).toString());
+                    }
+                     this.handleFile(clazz, request, o);
+//                  }
+                }
+                ModelView views = new ModelView("teste");
+                views.addItem("aro", o);
+                request.setAttribute("aro",o);
+                RequestDispatcher dispat = request.getRequestDispatcher(views.getUrl());
+                dispat.forward(request, response);
+                view = (ModelView)mets.invoke(o, null);
+            }else{
+                objet = this.ObjetParametre(mets, request);
+                view = (ModelView)mets.invoke(o,objet);
+            }
+            this.Dispatch(view, request, response);
         }catch(Exception e){
             e.printStackTrace(out);
         }
         
     }
-    public void action(String action,String key,Object vao,Object o,HttpServletRequest request, HttpServletResponse response) throws Exception{
-                PrintWriter out = response.getWriter();
-        if (action.compareToIgnoreCase("findAll")==0){
-                ModelView view = new ModelView(vao.getClass().getSimpleName());
-                view.addItem(key, vao);
-                request.setAttribute(key,view.getData());
-                RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
-                dispat.forward(request, response);
+    public Object caste(String acaster,Class classe){
+         Object vao = acaster;
+         if(classe==Double.class){
+            vao = Double.parseDouble(acaster);
         }
-        else if(action.compareToIgnoreCase("save")==0){
-
-            Class<?> clazz = o.getClass();
-            Field[] fields = clazz.getDeclaredFields();
-            Method[] listM = new Method[fields.length];
-            for(int i =0; i<fields.length; i++){
-                if(fields[i].getType()!= FileUpload.class){
-                    String capitalized = Character.toUpperCase(fields[i].getName().charAt(0)) + fields[i].getName().substring(1);
-    //                out.println(capitalized);
-                    Method temp = clazz.getDeclaredMethod("get"+ capitalized);
-                    Object value = request.getParameter(fields[i].getName());
-                    listM[i] = clazz.getDeclaredMethod("set"+ capitalized,String.class);
-                    listM[i].invoke(o, value);
-                    out.println(temp.invoke(o, null).toString());
-                }
-            }
-            this.handleFile(clazz, request, o);
-             ModelView view = new ModelView("teste");
-                view.addItem("aro", o);
-                request.setAttribute("aro",o);
-                RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
-                dispat.forward(request, response);
+        else if(classe==Integer.class){
+            vao = Integer.parseInt(acaster);
         }
+        else if(classe== Date.class){
+            vao = Date.valueOf(acaster);
+        }
+         return vao;
     }
+    public Object cast(String acaster,Class<?> [] classTable){
+        Object vao = acaster;
+        for(int i =0;i<classTable.length;i++){
+            if(classTable[i]==Double.class){
+                vao = Double.parseDouble(acaster);
+            }
+            else if(classTable[i]==Integer.class){
+                vao = Integer.parseInt(acaster);
+            }
+            else if(classTable[i]== Date.class){
+                vao = Date.valueOf(acaster);
+            }
+        }
+        return vao;
+    }
+    public String Capitalized(String lettre){
+        String capitalized = Character.toUpperCase(lettre.charAt(0)) + lettre.substring(1);
+        return capitalized;
+    } 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
