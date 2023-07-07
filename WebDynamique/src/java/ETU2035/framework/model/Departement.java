@@ -1,13 +1,17 @@
 package ETU2035.framework.model;
-
+import ETU2035.framework.server.GetUrl;
 public class Departement {
     private String nom_departement;
     private int nbr_departement;
     
     @GetUrl(url="findAllDept")
     public Departement findAll(){
-        Departement emp = new Departement(getNom_departement(),getNbr_departement());
+        Departement emp = new Departement("Departement Marketing",12);
         return emp;
+    }
+    @GetUrl(url="saveDept")
+    public void save(){
+        Departement emp = new Departement(this.getNom_departement(),this.getNbr_departement());
     }
     public Departement() {
     }
@@ -28,7 +32,7 @@ public class Departement {
         return nbr_departement;
     }
 
-    public void setNbr_departement(int nbr_departement) {
-        this.nbr_departement = nbr_departement;
+    public void setNbr_departement(String nbr_departement) {
+        this.nbr_departement = Integer.parseInt(nbr_departement);
     }
 }
