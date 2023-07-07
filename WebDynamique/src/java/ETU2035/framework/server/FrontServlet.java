@@ -1,4 +1,5 @@
 package ETU2035.framework.server;
+import com.google.gson.Gson;
 import java.io.*;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -204,7 +205,16 @@ public class FrontServlet extends HttpServlet {
                 objet = this.ObjetParametre(mets, request);
                 view = (ModelView)mets.invoke(o,objet);
             }
-            this.Dispatch(view, request, response);
+            view.SetIsJson(true);
+            out.println(view.GetIsJson());
+            if(view.GetIsJson()){
+                out.println("aooo");
+                String json = new Gson().toJson(view.getData());
+                out.println(json);
+            }else{
+                out.println(new Gson().toJson(view.getData()));
+            }
+//            this.Dispatch(view, request, response);
         }catch(Exception e){
             e.printStackTrace(out);
         }

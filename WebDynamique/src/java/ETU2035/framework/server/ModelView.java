@@ -4,8 +4,15 @@ import java.util.HashMap;
 
 public class ModelView {
     String url;
-  HashMap<String, Object> data = new HashMap<>(); 
+    HashMap<String, Object> data = new HashMap<>(); 
+   Boolean isJson = false;
 
+    public Boolean GetIsJson(){
+        return this.isJson;
+    }
+    public void SetIsJson(Boolean json){
+        this.isJson = json;
+    }
     public void addItem(String key, Object objet) {
         if (data == null) { 
             data = new HashMap<>();
