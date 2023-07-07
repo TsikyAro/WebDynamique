@@ -11,7 +11,9 @@ import java.lang.reflect.Parameter;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -187,6 +189,18 @@ public class FrontServlet extends HttpServlet {
                 }
             }
             
+            if( mets.isAnnotationPresent(Session.class) ){
+                HashMap<String, Object> object = new HashMap<String,Object>();
+                HttpSession sessions = request.getSession();
+                List<String> str = Collections.list(sessions.getAttributeNames());
+                for(String s: str){
+                    object.put( s , sessions.getAttribute( s ) );
+                }
+                
+                o.getClass().getDeclaredMethod("setSession", HashMap.class).invoke( o , object);
+                
+            }
+            
             int paramCount = mets.getParameterCount();
             ModelView view;
             Object [] objet;
@@ -251,6 +265,15 @@ public class FrontServlet extends HttpServlet {
             }else{
                 out.println(new Gson().toJson(view.getData()));
             }
+             
+            if( mets.isAnnotationPresent(Session.class) ){
+                HashMap<String, Object> objs = (HashMap<String, Object>)o.getClass().getDeclaredMethod("getSession").invoke(o);
+                HttpSession sessions = request.getSession();
+                objs.keySet().forEach( keys -> {
+                    sessions.setAttribute( keys, objs.get(keys) );
+                });
+            }
+            
             this.Dispatch(view, request, response);
         }catch(Exception e){
             e.printStackTrace(out);

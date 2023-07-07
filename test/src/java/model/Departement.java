@@ -5,14 +5,28 @@ import ETU2035.framework.server.FileUpload;
 import ETU2035.framework.server.GetUrl;
 import ETU2035.framework.server.ModelView;
 import ETU2035.framework.server.RestApi;
+import ETU2035.framework.server.Session;
 import ETU2035.framework.server.Singleton;
+import java.util.HashMap;
 
 @Singleton(url="scope")
 public class Departement {
     private String nom_departement;
     private Integer nbr_departement;
     private ETU2035.framework.server.FileUpload upload;
+        
+    HashMap<String, Object> session;
 
+    public HashMap<String, Object> getSession() {
+        return session;
+    }
+
+    public void setSession(HashMap<String, Object> session) {
+        this.session = session;
+    }
+    
+    
+    
     public FileUpload getUpload() {
         return upload;
     }
@@ -25,12 +39,14 @@ public class Departement {
        Departement emp = new Departement("Departement Marketing",12);
        return emp;
     }
+    @Session
     @AuthAnnotation(url="admin")
     @RestApi(url="resteapi")
     @GetUrl(url="findAllDept")
     public ModelView findAll(Integer id){
         Departement emp = new Departement("Departement Marketing",12);
         ModelView view  = new ModelView(this.getClass().getSimpleName());
+        System.out.println(this.getSession());
         view.addItem("dept", emp);
         return view;
     }
@@ -42,6 +58,7 @@ public class Departement {
         view.addSession("profil", "admin");
         return view;
     }
+    
     
     @GetUrl(url="saveDept")
     public void save(){
