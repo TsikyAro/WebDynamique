@@ -21,11 +21,14 @@ import org.apache.commons.io.FilenameUtils;
 public class FrontServlet extends HttpServlet {
       HashMap<String,Mapping> MappingUrls;
       HashMap<String,Object> singleton;
+      String session;
+      String profil;
     public void init (){
         MappingUrls = new HashMap<>();
         singleton = new HashMap<>();
           try {
-            String teste =getInitParameter("connecte");
+           session =getInitParameter("connecte");
+           profil =getInitParameter("type");
             String directory =getServletContext().getRealPath("\\WEB-INF\\classes\\model");
             String [] classe = reset(directory);
             for(int i =0 ;i< classe.length; i++){
@@ -41,11 +44,10 @@ public class FrontServlet extends HttpServlet {
                 }
                 Method [] methods = clazz.getDeclaredMethods();
                 for (Method method : methods) {
-                     Annotation[] an = method.getAnnotations();
-                     if(an.length!=0){
+                    if( method.isAnnotationPresent(GetUrl.class) ){
                          GetUrl annotation = method.getAnnotation(GetUrl.class);
                          MappingUrls.put(annotation.url(),new Mapping(name,method.getName()));
-                     }
+                    }
                 }
             }
          } catch (Exception ex) {
@@ -149,7 +151,7 @@ public class FrontServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws Exception {
         PrintWriter out = response.getWriter();
-        out.println(MappingUrls.size());
+        out.println(MappingUrls);
         try{
             Mapping m = MappingUrls.get(request.getRequestURI().replace(request.getContextPath()+"/",""));
             String key = request.getRequestURI().replace(request.getContextPath()+"/","");
@@ -174,6 +176,17 @@ public class FrontServlet extends HttpServlet {
                 }
             }
             
+            if(mets.isAnnotationPresent(AuthAnnotation.class)){
+                if(request.getSession().getAttribute(session)!=null){
+                    AuthAnnotation aut = mets.getAnnotation(AuthAnnotation.class );
+                    if(aut.url().isEmpty()==false && aut.url().equals(request.getSession().getAttribute(profil))==false){
+                        throw new Exception("Vous ne pouvez pas acceder a cette page");
+                    }
+                }else{
+                    throw new Exception("Aucune Session en Cour");
+                }
+            }
+            
             int paramCount = mets.getParameterCount();
             ModelView view;
             Object [] objet;
@@ -190,37 +203,55 @@ public class FrontServlet extends HttpServlet {
                       String value = request.getParameter(fields[i].getName());
                       Object ob = caste(value,fields[i].getType());
                       listM[i].invoke(o,ob);
-                      out.println(temp.invoke(o, null).toString());
+//                      out.println(temp.invoke(o, null).toString());
                     }
                      this.handleFile(clazz, request, o);
 //                  }
                 }
-                ModelView views = new ModelView("teste");
-                views.addItem("aro", o);
-                request.setAttribute("aro",o);
-                RequestDispatcher dispat = request.getRequestDispatcher(views.getUrl());
-                dispat.forward(request, response);
-                view = (ModelView)mets.invoke(o, null);
+//                ModelView views = new ModelView("teste");
+//                views.addItem("aro", o);
+//                request.setAttribute("aro",o);
+//                RequestDispatcher dispat = request.getRequestDispatcher(views.getUrl());
+//                dispat.forward(request, response);
+                view = (ModelView)mets.invoke(o );
+                view.getData().keySet().forEach(keys -> {
+                    request.setAttribute( keys, view.getData().get(keys) );
+                });
+                
+                view.getSession().keySet().forEach( ses ->{
+                    request.getSession().setAttribute(ses, view.getSession().get( ses ));
+                });
+//                RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
+//                dispat.forward(request, response);
             }else{
                 objet = this.ObjetParametre(mets, request);
-                view = (ModelView)mets.invoke(o,objet);
+                view = (ModelView) mets.invoke(o,objet);
+                view.getData().keySet().forEach(keys -> {
+                    request.setAttribute( keys, view.getData().get(keys) );
+                });
+                
+                view.getSession().keySet().forEach( ses ->{
+                    request.getSession().setAttribute(ses, view.getSession().get( ses ));
+                });
+//                RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
+//                dispat.forward(request, response);
             }
             Annotation[] an = mets.getAnnotations();
             if(an.length!=0 ){
                 RestApi annotation = mets.getAnnotation(RestApi.class);
                 String json = new Gson().toJson(view.getData());
-                out.println(json+" 1");
+                out.println(json);
             }
-            view.SetIsJson(true);
-            out.println(view.GetIsJson());
+//            view.SetIsJson(true);
+//            out.println(view.GetIsJson());
             if(view.GetIsJson()){
-                out.println("aooo");
+//                out.println("aooo");
                 String json = new Gson().toJson(view.getData());
-                out.println(json+" 2");
+                out.println(json);
             }else{
                 out.println(new Gson().toJson(view.getData()));
             }
-//            this.Dispatch(view, request, response);
+            this.Dispatch(view, request, response);
         }catch(Exception e){
             e.printStackTrace(out);
         }
@@ -228,6 +259,7 @@ public class FrontServlet extends HttpServlet {
     }
     public Object caste(String acaster,Class classe){
          Object vao = acaster;
+         if( acaster == null ) return null;
          if(classe==Double.class){
             vao = Double.parseDouble(acaster);
         }

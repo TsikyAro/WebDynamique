@@ -5,11 +5,11 @@
         <servlet-class>ETU2035.framework.server.FrontServlet</servlet-class>
         <init-param>
             <param-name>connecte</param-name>
-            <param-value>Tsiky</param-value>
+            <param-value>isconnected</param-value>
         </init-param>
         <init-param>
             <param-name>type</param-name>
-            <param-value>admin`</param-value>
+            <param-value>profil</param-value>
         </init-param>
     </servlet>
     <servlet>

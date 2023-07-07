@@ -5,6 +5,23 @@ import java.util.HashMap;
 public class ModelView {
     String url;
     HashMap<String, Object> data = new HashMap<>(); 
+    HashMap<String,Object>  session = new HashMap<>();
+
+    public HashMap<String, Object> getSession() {
+        return session;
+    }
+
+    public void addSession(String key,Object valeur) {
+        session.put(key, valeur);
+    }
+
+    public Boolean getIsJson() {
+        return isJson;
+    }
+
+    public void setIsJson(Boolean isJson) {
+        this.isJson = isJson;
+    }
    Boolean isJson = false;
 
     public Boolean GetIsJson(){

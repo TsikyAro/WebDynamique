@@ -1,5 +1,6 @@
 package model;
 import ETU2035.framework.server.Argument;
+import ETU2035.framework.server.AuthAnnotation;
 import ETU2035.framework.server.FileUpload;
 import ETU2035.framework.server.GetUrl;
 import ETU2035.framework.server.ModelView;
@@ -24,6 +25,7 @@ public class Departement {
        Departement emp = new Departement("Departement Marketing",12);
        return emp;
     }
+    @AuthAnnotation(url="admin")
     @RestApi(url="resteapi")
     @GetUrl(url="findAllDept")
     public ModelView findAll(Integer id){
@@ -32,6 +34,15 @@ public class Departement {
         view.addItem("dept", emp);
         return view;
     }
+    
+    @GetUrl( url = "login" )
+    public ModelView login(){
+        ModelView view = new ModelView("index");
+        view.addSession("isconnected", true);
+        view.addSession("profil", "admin");
+        return view;
+    }
+    
     @GetUrl(url="saveDept")
     public void save(){
         Departement emp = new Departement(this.getNom_departement(),this.getNbr_departement());
