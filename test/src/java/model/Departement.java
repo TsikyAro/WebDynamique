@@ -3,6 +3,7 @@ import ETU2035.framework.server.Argument;
 import ETU2035.framework.server.FileUpload;
 import ETU2035.framework.server.GetUrl;
 import ETU2035.framework.server.ModelView;
+import ETU2035.framework.server.RestApi;
 import ETU2035.framework.server.Singleton;
 
 @Singleton(url="scope")
@@ -18,7 +19,12 @@ public class Departement {
     public void setUpload(FileUpload upload) {
         this.upload = upload;
     }
-    
+    @RestApi(url="resteapi")
+    public Departement select(){
+       Departement emp = new Departement("Departement Marketing",12);
+       return emp;
+    }
+    @RestApi(url="resteapi")
     @GetUrl(url="findAllDept")
     public ModelView findAll(Integer id){
         Departement emp = new Departement("Departement Marketing",12);

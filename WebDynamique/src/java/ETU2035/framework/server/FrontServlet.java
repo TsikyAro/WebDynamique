@@ -205,12 +205,18 @@ public class FrontServlet extends HttpServlet {
                 objet = this.ObjetParametre(mets, request);
                 view = (ModelView)mets.invoke(o,objet);
             }
+            Annotation[] an = mets.getAnnotations();
+            if(an.length!=0 ){
+                RestApi annotation = mets.getAnnotation(RestApi.class);
+                String json = new Gson().toJson(view.getData());
+                out.println(json+" 1");
+            }
             view.SetIsJson(true);
             out.println(view.GetIsJson());
             if(view.GetIsJson()){
                 out.println("aooo");
                 String json = new Gson().toJson(view.getData());
-                out.println(json);
+                out.println(json+" 2");
             }else{
                 out.println(new Gson().toJson(view.getData()));
             }
